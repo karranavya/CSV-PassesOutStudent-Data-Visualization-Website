@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Analyzer | Home</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          justify-content: center;  /* Added this line to center the boxes */
+        }
+        .box {
+          background-color: white;
+          width: 280px;
+          height: 250px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          text-align: center;
+        }
+        .chart-container {
+          width: 100%;
+          height: 300px;
+          padding: 20px;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          background-color: #ffffff;
+        }
+        .chart-container canvas {
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+</head>
+<body class="bg-gray-800">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6 text-white">Welcome, {{ student_name }}</h1>
+        <form class="mb-6" action="/analyze" method="POST">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+            </div>
+        </form>
+        <div class="container">
+            <div class="box" style="background-image: linear-gradient(230deg, #759bff, #843cf6);">
+                <h1 style="font-size: 20px; color: rgb(255, 255, 255); font-weight: bold;">CGPA</h1>
+                <p style="font-size: 18px; color: rgb(255, 255, 255); font-weight: bold;">{{ cgpa_value }}</p>
+            </div>
+            <div class="box" style="background-image: linear-gradient(230deg, #fc5286, #fbaaa2);">
+                <h1 style="font-size: 20px; color: rgb(255, 255, 255); font-weight: bold;">ATTENDANCE</h1>
+                <p style="font-size: 18px; color: rgb(255, 255, 255); font-weight: bold;">{{ total_a_value }}</p>
+            </div>
+            <div class="box" style="background-image: linear-gradient(230deg, #ffc480, #ff763b);">
+                <h1 style="font-size: 20px; color: rgb(255, 255, 255); font-weight: bold;">ACHIEVEMENTS</h1>
+                <p style="font-size: 18px; color: rgb(255, 255, 255); font-weight: bold;">{{ total_activities_sum }}</p>
+            </div>
+            <div class="box" style="background-image: linear-gradient(230deg, #0e4cfd, #6a8eff);">
+                <h1 style="font-size: 20px; color: rgb(255, 255, 255); font-weight: bold;">SPF BAND</h1>
+                <p style="font-size: 18px; color: rgb(255, 255, 255); font-weight: bold;">{{ spf_value }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="chart-container">
+                <canvas id="chart3" class="w-full h-full"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart" class="w-full h-full"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart2" class="w-full h-full"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {% if chart_data %}
+            var ctx = document.getElementById('chart').getContext('2d');
+            var ctx2 = document.getElementById('chart2').getContext('2d');
+            var ctx3 = document.getElementById('chart3').getContext('2d');
+            var chartData = {{ chart_data | safe }};
+            var labels = chartData.labels;
+            var datasets = chartData.datasets;
+            var barColors = [
+                "#b91d47", "#00aba9", "#2b5797", "#e8c3b9", "#1e7145",
+                "#bcdb25", "#ff5733", "#654321", "#ffff00", "#7c5295"
+            ];
+            var color="#b91d47";
+
+            var myChart3 = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: ['Hackathon', 'Projects', 'Sports', 'Workshops', 'Clubs', 'Internships', 'Tech Visits', 'Research Papers'],
+                    datasets: [{
+                        label: 'Total Activities',
+                        data: chartData.total_activities,
+                        backgroundColor: barColors,
+                        borderColor: "#000000",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['SEM-1', 'SEM-2', 'SEM-3', 'SEM-4', 'SEM-5', 'SEM-6', 'SEM-7', 'SEM-8'],
+                    datasets: [{
+                        label: 'CGPA',
+                        data: chartData.cgpa,
+                        backgroundColor: color,
+                        borderColor: "#000000",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            min: 1,
+                            max: 10
+                        }
+                    }
+                }
+            });
+
+            var myChart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'],
+                    datasets: [{
+                        label: 'Attendance',
+                        data: chartData.attendance,
+                        backgroundColor: color,
+                        borderColor: "#000000",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            min: 50,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        {% endif %}
+    </script>
+</body>
+</html>
